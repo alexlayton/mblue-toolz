@@ -212,7 +212,17 @@ func (bm BtMgmt) SetLowEnergy(controllerID uint16, le bool) (currentSettings *Co
 	return
 }
 
+func (bm BtMgmt) SetDualMode(controllerID uint16, dual bool) (currentSettings *ControllerSettings, err error) {
+	var bParam byte
+	if dual { bParam = 1}
+	payload,err := globalMgmtConn.RunCmd(controllerID, CMD_SET_BR_EDR, bParam)
 
+	if err != nil { return }
+	currentSettings = &ControllerSettings{}
+	err = currentSettings.UpdateFromPayload(payload)
+	if err != nil { return }
+	return
+}
 
 func NewBtMgmt() (mgmt *BtMgmt, err error) {
 	// check if global MgmtConnection is initialized, do otherwise
