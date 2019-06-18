@@ -224,6 +224,23 @@ func (bm BtMgmt) SetDualMode(controllerID uint16, dual bool) (currentSettings *C
 	return
 }
 
+func (bm BtMgmt) SetLocalName(controllerID uint16, plong string, pshort string) (err error) {
+	l := []byte(plong)
+	append(l,[]byte("\x00"))
+	
+	s := []byte(pshort)
+	append(s,[]byte("\x00"))
+
+	bParam := append(l,s...)
+
+	_payload,err := globalMgmtConn.RunCmd(controllerID, CMD_SET_LOCAL_NAME, bParam)
+
+	if err != nil {
+		return err
+	}
+	return
+}
+
 func NewBtMgmt() (mgmt *BtMgmt, err error) {
 	// check if global MgmtConnection is initialized, do otherwise
 	err = runGlobalMgmtConnection()
