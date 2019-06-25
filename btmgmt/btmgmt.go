@@ -7,6 +7,11 @@ import (
 	"sync"
 )
 
+const (
+	shortNameLength = 11
+	longNameLength	= 249
+)
+
 var (
 	ErrMgmtConnFailed                   = errors.New("BtMgmt socket connection failed")
 	globalMgmtConn      *MgmtConnection = nil
@@ -224,6 +229,44 @@ func (bm BtMgmt) SetDualMode(controllerID uint16, dual bool) (currentSettings *C
 	return
 }
 
+func (bm BtMgmt) SetLocalName(controllerID uint16, name string, shortName string) (err error) {
+	length := longNameLength + shortNameLength
+	
+	bytesArr := make([]byte, length, length)
+	
+	nameBytes := []byte(name)
+	
+	if len(nameBytes) >= longNameLength {
+		return errors.New("Name too big")
+	}
+	
+	copyBytes(nameBytes, bytesArr, 0)
+	
+	shortNameBytes := []byte(shortName)
+	
+	if len(shortNameBytes) >= shortNameLength {
+		return errors.New("Short name too big")
+	}
+	
+	copyBytes(shortNameBytes, bytesArr, longNameLength)
+
+	payload,err := globalMgmtConn.RunCmd(controllerID, CMD_SET_LOCAL_NAME, bytesArr...)
+
+	fmt.Println(bytesArr)
+	fmt.Println(payload)
+
+	if err != nil {
+		return err
+	}
+	return
+}
+
+func copyBytes(from []byte, to []byte, index int) {
+	for i, j := 0, index; i < len(from); i, j = i + 1, j + 1 {
+		to[j] = from[i]
+	}
+}
+
 func NewBtMgmt() (mgmt *BtMgmt, err error) {
 	// check if global MgmtConnection is initialized, do otherwise
 	err = runGlobalMgmtConnection()
@@ -234,3 +277,4 @@ func NewBtMgmt() (mgmt *BtMgmt, err error) {
 	mgmt = &BtMgmt{}
 	return
 }
+
